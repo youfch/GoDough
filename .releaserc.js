@@ -27,7 +27,7 @@ module.exports = {
 		[
 			'@semantic-release/git',
 			{
-				assets: ['GoDough.csproj'],
+				assets: ['src/GoDough.csproj'],
 				message:
 					'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
 			},

@@ -53,9 +53,7 @@ namespace GoDough.Runtime
       var builder = Host.CreateDefaultBuilder(null);
 
       GD.Print("[GoDough] Booting Dependency Container");
-      builder
-        .ConfigureLogging(loggingBuilder => this.ConfigureLogging(loggingBuilder))
-        .ConfigureServices(services => this.ConfigureServices(services));
+      this.ConfigureBuilder(builder);
 
       GD.Print("[GoDough] Sealing AppHost");
       this.Application = builder.Build();
@@ -66,16 +64,52 @@ namespace GoDough.Runtime
       }
     }
 
+    /// <summary>
+    /// Applies the host configuration pipeline: the host-builder hook first, then logging,
+    /// then services. Kept separate from <see cref="Start"/> so the pipeline can be verified
+    /// without launching the engine.
+    /// </summary>
+    protected virtual IHostBuilder ConfigureBuilder(IHostBuilder builder)
+    {
+      return this.ConfigureIHostBuilder(builder)
+        .ConfigureLogging(loggingBuilder => this.ConfigureLogging(loggingBuilder))
+        .ConfigureServices(services => this.ConfigureServices(services));
+    }
+
+    /// <summary>
+    /// Configures the host builder before logging and services are applied. Override to replace
+    /// the service provider factory (for example Autofac via <c>UseServiceProviderFactory</c>)
+    /// or to configure host-level logging such as Serilog. Do not configure logging or services here.
+    /// </summary>
+    public virtual IHostBuilder ConfigureIHostBuilder(IHostBuilder hostBuilder)
+    {
+      return hostBuilder;
+    }
+
+    /// <summary>
+    /// Whether the default engine console logger is registered. Override to return false to remove it.
+    /// </summary>
+    protected virtual bool AddGodotLoggerByDefault => true;
+
+    /// <summary>
+    /// Minimum log level applied when the consumer does not override it. Defaults to
+    /// <see cref="LogLevel.Trace"/> in debug builds and to no override otherwise.
+    /// </summary>
+    protected virtual LogLevel? DefaultMinimumLogLevel =>
+      OS.IsDebugBuild() ? LogLevel.Trace : null;
+
     public virtual void ConfigureLogging(ILoggingBuilder loggingBuilder)
     {
-      loggingBuilder.AddGodotLogger();
-
-      if (!OS.IsDebugBuild())
+      if (this.AddGodotLoggerByDefault)
       {
-        return;
+        loggingBuilder.AddGodotLogger();
       }
 
-      loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+      var minimumLevel = this.DefaultMinimumLogLevel;
+      if (minimumLevel.HasValue)
+      {
+        loggingBuilder.SetMinimumLevel(minimumLevel.Value);
+      }
     }
 
     public virtual void ConfigureServices(IServiceCollection services)

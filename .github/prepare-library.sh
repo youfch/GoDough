@@ -4,4 +4,4 @@ xmlstarlet edit \
   --inplace \
   --update "/Project/PropertyGroup/AssemblyVersion" \
   --value  "$VERSION" \
-  GoDough.csproj
+  src/GoDough.csproj

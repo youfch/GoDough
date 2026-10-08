@@ -22,7 +22,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.421
+          dotnet-version: 8.0.x
       - name: Cache npm
         uses: actions/cache@v3
         with:
@@ -30,9 +30,9 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
       - name: Build
-        run: dotnet build --configuration Release
+        run: dotnet build src/GoDough.sln --configuration Release
       - name: Test
-        run: dotnet test --configuration Release --no-build
+        run: dotnet test src/GoDough.sln --configuration Release --no-build
       - name: Publish package
         run: |
           npx \
