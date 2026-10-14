@@ -7,26 +7,29 @@ using GoDough.Visuals.Attributes;
 
 namespace GoDough.Visuals.Components {
   /// <summary>
-  /// A single node-binding instruction: which member to write to, which unique-named node to look
-  /// up, the member's declared type and whether a missing node is tolerated.
+  /// A single node-binding instruction: which member to write to, the NodePath expression to resolve,
+  /// the member's declared type and whether a missing node is tolerated.
   /// </summary>
   internal sealed class NodeBinding {
-    public NodeBinding(MemberInfo member, string nodeName, Type expectedType, bool ignoreInexistent) {
+    public NodeBinding(MemberInfo member, string pathExpression, Type expectedType, bool ignoreInexistent) {
       this.Member = member;
-      this.NodeName = nodeName;
+      this.PathExpression = pathExpression;
       this.ExpectedType = expectedType;
       this.IgnoreInexistent = ignoreInexistent;
     }
 
     public MemberInfo Member { get; }
-    public string NodeName { get; }
+
+    /// <summary>The NodePath expression handed to <c>GetNode</c>: "%Score", "Hud/Score", "/root/Main".</summary>
+    public string PathExpression { get; }
+
     public Type ExpectedType { get; }
     public bool IgnoreInexistent { get; }
   }
 
   /// <summary>
   /// Builds the node bindings for a type using reflection only (no Godot types), so the member
-  /// selection and name resolution rules can be unit tested without the engine.
+  /// selection, path resolution and name derivation rules can be unit tested without the engine.
   /// </summary>
   internal static class NodeBindingPlan {
     private const BindingFlags MemberFlags =
@@ -44,16 +47,10 @@ namespace GoDough.Visuals.Components {
           continue;
         }
 
-        var attribute = GetUniqueNodeAttribute(property);
-        if (attribute == null) {
-          continue;
+        var binding = CreateBinding(property, property.Name, property.PropertyType);
+        if (binding != null) {
+          bindings.Add(binding);
         }
-
-        bindings.Add(new NodeBinding(
-          property,
-          ResolveNodeName(attribute, property.Name),
-          property.PropertyType,
-          attribute.IgnoreInexistent));
       }
 
       foreach (var field in type.GetFields(MemberFlags)) {
@@ -61,27 +58,51 @@ namespace GoDough.Visuals.Components {
           continue;
         }
 
-        var attribute = GetUniqueNodeAttribute(field);
-        if (attribute == null) {
-          continue;
+        var binding = CreateBinding(field, field.Name, field.FieldType);
+        if (binding != null) {
+          bindings.Add(binding);
         }
-
-        bindings.Add(new NodeBinding(
-          field,
-          ResolveNodeName(attribute, field.Name),
-          field.FieldType,
-          attribute.IgnoreInexistent));
       }
 
       return bindings;
     }
 
-    private static string ResolveNodeName(UniqueNode attribute, string memberName) =>
-      String.IsNullOrEmpty(attribute.SpecificName) ? memberName : attribute.SpecificName;
+    private static NodeBinding CreateBinding(MemberInfo member, string memberName, Type memberType) {
+      // [UniqueNode] resolves a unique-named node; [FromNode] takes a verbatim NodePath.
+      var unique = GetAttribute<UniqueNode>(member);
+      if (unique != null) {
+        return new NodeBinding(
+          member,
+          "%" + NameOrFallback(unique.SpecificName, memberName),
+          memberType,
+          unique.IgnoreInexistent);
+      }
 
-    private static UniqueNode GetUniqueNodeAttribute(MemberInfo member) =>
-      member.GetCustomAttributes()
-        .FirstOrDefault(attribute => typeof(UniqueNode).IsAssignableFrom(attribute.GetType()))
-        as UniqueNode;
+      var fromNode = GetAttribute<FromNode>(member);
+      if (fromNode != null) {
+        return new NodeBinding(
+          member,
+          NameOrFallback(fromNode.Path, memberName),
+          memberType,
+          fromNode.IgnoreInexistent);
+      }
+
+      return null;
+    }
+
+    private static string NameOrFallback(string explicitName, string memberName) =>
+      String.IsNullOrEmpty(explicitName) ? DeriveFromMemberName(memberName) : explicitName;
+
+    /// <summary>
+    /// Derives the node name/path from the member name, stripping a leading underscore (the common
+    /// C# private-field convention) so that <c>_score</c> maps to <c>score</c>.
+    /// </summary>
+    private static string DeriveFromMemberName(string memberName) {
+      var trimmed = memberName.TrimStart('_');
+      return trimmed.Length == 0 ? memberName : trimmed;
+    }
+
+    private static T GetAttribute<T>(MemberInfo member) where T : Attribute =>
+      member.GetCustomAttributes().OfType<T>().FirstOrDefault();
   }
 }
