@@ -135,3 +135,46 @@ public partial class PlayerNode : Node {
 - Members are resolved from the current `AppHost` service provider, so injection is container-agnostic.
 - Required (default) members throw a descriptive error when the service is missing; optional members
   are skipped. Keyed services use `[Inject("key")]`.
+
+## `[UniqueNode]` node binding
+
+Node binding is a **separate pipeline** from service injection: it resolves unique-named (`%`) nodes
+from the scene tree and never touches the service container. Call it alongside `WireNode` when you
+need both.
+
+```cs
+using Godot;
+using GoDough.Composition.Extensions;   // WireNode
+using GoDough.Visuals.Attributes;       // [UniqueNode]
+using GoDough.Visuals.Components;       // BindToViewModel
+
+public partial class PlayerHud : Control {
+  [Inject] private IGameState _gameState = null!;                 // service
+  [UniqueNode] private Label _score = null!;                      // binds to %Score (member name)
+  [UniqueNode("HealthBar")] private ProgressBar _health = null!;  // binds to %HealthBar
+
+  public override void _Ready() {
+    this.WireNode();        // services
+    this.BindToViewModel(); // nodes
+  }
+}
+```
+
+- The target name defaults to the member name and can be overridden on the attribute. When no name
+  is given the member name must match the unique node name, so `_`-prefixed private fields normally
+  need an explicit name (`[UniqueNode("Score")] private Label _score`).
+- Public and private properties and fields are bound; indexers, get-only properties and readonly
+  fields are skipped.
+- A missing node throws `NodeNotFoundException`; annotate the member with
+  `[UniqueNode(ignoreInexistent: true)]` to skip it instead.
+- A node whose runtime type does not match the member throws `NodeBindingException`, reporting the
+  member name, the expected type and the actual type.
+
+## Default service registration
+
+`AppHost.ConfigureServices` registers the framework's own service graph out of the box — the host
+itself, `IGodotApi`, the main-thread dispatcher, the component factory, and scene management with its
+dependencies — so they resolve without any extra wiring. Every registration uses `TryAdd` semantics:
+register your own implementation first to override a default. If you prefer to register a subset
+explicitly, `AddGodotRuntimeUtilities()`, `AddThreadingUtilities()` and `AddComponentFactory()` are
+idempotent and can be called at any time.
