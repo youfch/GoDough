@@ -1,13 +1,16 @@
 using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using Godot;
 using GoDough.Runtime.LivecycleHooks;
 using GoDough.Diagnostics.Logging;
+using GoDough.Threading;
 using GoDough.Visuals;
+using GoDough.Visuals.Components;
 using System;
 
 namespace GoDough.Runtime
@@ -112,12 +115,24 @@ namespace GoDough.Runtime
       }
     }
 
+    /// <summary>
+    /// Registers the framework's own service graph (the host itself, the Godot API abstraction, the
+    /// main-thread dispatcher, the component factory, scene management and its dependencies) so that
+    /// framework services resolve out of the box. Every registration uses TryAdd semantics, so
+    /// consumers can override any default with their own registration.
+    /// </summary>
     public virtual void ConfigureServices(IServiceCollection services)
     {
-      services
-        .AddSingleton<IAppHostNodeProvider, AppHostNodeProvider>(x =>
-          new AppHostNodeProvider(() => this.AutoLoadNode))
-        .AddSingleton(typeof(SceneManagementService<>));
+      services.TryAddSingleton<AppHost>(this);
+
+      services.TryAddSingleton<IAppHostNodeProvider>(x =>
+        new AppHostNodeProvider(() => this.AutoLoadNode));
+
+      services.AddGodotRuntimeUtilities(); // IGodotApi
+      services.AddThreadingUtilities();    // Dispatcher (+ its IOnProcess mapping)
+      services.AddComponentFactory();      // ComponentFactory
+
+      services.TryAddSingleton(typeof(SceneManagementService<>));
     }
 
     public void Boot()
