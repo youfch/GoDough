@@ -136,22 +136,32 @@ public partial class PlayerNode : Node {
 - Required (default) members throw a descriptive error when the service is missing; optional members
   are skipped. Keyed services use `[Inject("key")]`.
 
-## `[UniqueNode]` node binding
+## Node binding (`[UniqueNode]` / `[FromNode]`)
 
-Node binding is a **separate pipeline** from service injection: it resolves unique-named (`%`) nodes
-from the scene tree and never touches the service container. Call it alongside `WireNode` when you
-need both.
+Node binding is a **separate pipeline** from service injection: it resolves nodes from the scene tree
+and never touches the service container. Call it alongside `WireNode` when you need both.
+
+- `[UniqueNode]` resolves a **unique-named** node (`%`).
+- `[FromNode]` takes a **verbatim Godot NodePath**: a child, a relative path, an absolute path, a
+  unique name, or a parent step.
 
 ```cs
 using Godot;
 using GoDough.Composition.Extensions;   // WireNode
-using GoDough.Visuals.Attributes;       // [UniqueNode]
+using GoDough.Visuals.Attributes;       // [UniqueNode] / [FromNode]
 using GoDough.Visuals.Components;       // BindToViewModel
 
 public partial class PlayerHud : Control {
-  [Inject] private IGameState _gameState = null!;                 // service
-  [UniqueNode] private Label _score = null!;                      // binds to %Score (member name)
-  [UniqueNode("HealthBar")] private ProgressBar _health = null!;  // binds to %HealthBar
+  [Inject] private IGameState _gameState = null!;                  // service
+
+  [UniqueNode] private Label _score = null!;                       // %score   (member name)
+  [UniqueNode("HealthBar")] private ProgressBar _health = null!;   // %HealthBar
+
+  [FromNode("Title")] private Label _title = null!;                // child "Title" (not unique)
+  [FromNode("Hud/Score")] private Label _hudScore = null!;         // relative path
+  [FromNode("/root/Main/Hud/Total")] private Label _total = null!; // absolute path
+  [FromNode("..")] private Control _parent = null!;                // parent
+  [FromNode(ignoreInexistent: true)] private Label _optional = null!; // missing - skipped
 
   public override void _Ready() {
     this.WireNode();        // services
@@ -160,15 +170,16 @@ public partial class PlayerHud : Control {
 }
 ```
 
-- The target name defaults to the member name and can be overridden on the attribute. When no name
-  is given the member name must match the unique node name, so `_`-prefixed private fields normally
-  need an explicit name (`[UniqueNode("Score")] private Label _score`).
+- When no name/path is given, the member name is used and a **leading underscore is stripped**
+  (`_score` → `score`), so `[UniqueNode] private Label _score` binds to `%score`.
 - Public and private properties and fields are bound; indexers, get-only properties and readonly
   fields are skipped.
-- A missing node throws `NodeNotFoundException`; annotate the member with
-  `[UniqueNode(ignoreInexistent: true)]` to skip it instead.
+- A missing node throws `NodeNotFoundException` (naming the path, the member and its owner); annotate
+  the member with `ignoreInexistent: true` to skip it instead.
 - A node whose runtime type does not match the member throws `NodeBindingException`, reporting the
   member name, the expected type and the actual type.
+- Godot node names are **case-sensitive** (`%score` and `%Score` differ), so prefer unique names or
+  relative paths; absolute paths (`/root/...`) are stable references but depend on the scene tree.
 
 ## Default service registration
 
