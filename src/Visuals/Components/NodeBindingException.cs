@@ -1,6 +1,6 @@
 using System;
 
-namespace GoDough {
+namespace GoDough.Visuals.Components {
   /// <summary>
   /// Thrown when a member annotated for node binding resolves to a node whose runtime type is not
   /// assignable to the member's declared type.

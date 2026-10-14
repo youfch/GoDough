@@ -1,6 +1,6 @@
 using System;
 
-namespace GoDough {
+namespace GoDough.Visuals.Components {
   public class NodeNotFoundException : Exception {
     public string NodeName { get; }
 

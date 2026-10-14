@@ -174,10 +174,11 @@ public partial class PlayerHud : Control {
   (`_score` → `score`), so `[UniqueNode] private Label _score` binds to `%score`.
 - Public and private properties and fields are bound; indexers, get-only properties and readonly
   fields are skipped.
-- A missing node throws `NodeNotFoundException` (naming the path, the member and its owner); annotate
-  the member with `ignoreInexistent: true` to skip it instead.
-- A node whose runtime type does not match the member throws `NodeBindingException`, reporting the
-  member name, the expected type and the actual type.
+- A missing node throws `GoDough.Visuals.Components.NodeNotFoundException` (naming the path, the
+  member and its owner); annotate the member with `ignoreInexistent: true` to skip it instead.
+- A node whose runtime type does not match the member throws
+  `GoDough.Visuals.Components.NodeBindingException`, reporting the member name, the expected type and
+  the actual type.
 - Godot node names are **case-sensitive** (`%score` and `%Score` differ), so prefer unique names or
   relative paths; absolute paths (`/root/...`) are stable references but depend on the scene tree.
 
