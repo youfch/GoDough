@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GoDough.Demo;
 
-/// <summary>默认问候服务（未键控）。</summary>
+/// <summary>Default (unkeyed) greeting service.</summary>
 public sealed class Greeter : IGreeter
 {
     private readonly ILogger<Greeter> _logger;

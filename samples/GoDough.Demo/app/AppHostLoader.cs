@@ -5,9 +5,9 @@ using GoDough.Runtime;
 namespace GoDough.Demo;
 
 /// <summary>
-/// Autoload 节点：唯一被挂到「自动加载」的东西。
-/// AppHost 是普通 C# 类（非 Node），不能直接 autoload，所以由这个 Node 承载它，
-/// 并把引擎回调转发给 AppHost。
+/// Autoload node: the only thing registered under Project Settings &gt; Autoload.
+/// AppHost is a plain C# class (not a Node), so it cannot be autoloaded directly;
+/// this node hosts it and forwards the engine callbacks to it.
 /// </summary>
 public partial class AppHostLoader : Node
 {

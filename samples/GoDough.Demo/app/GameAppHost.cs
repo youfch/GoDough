@@ -18,32 +18,36 @@ using NLog.Extensions.Logging;
 namespace GoDough.Demo;
 
 /// <summary>
-/// 应用宿主：演示「换容器（Autofac）+ 加日志（NLog）+ 注册业务服务」。
+/// Application host: demonstrates replacing the DI container (Autofac), adding a logging
+/// provider (NLog) and registering the application services.
 /// </summary>
 public sealed class GameAppHost : AppHost
 {
     public GameAppHost(Node autoLoadNode) : base(autoLoadNode) { }
 
-    // (1) 宿主扩展点：在日志/服务之前介入，替换 DI 容器为 Autofac。
+    // (1) Host extension point: runs before logging/services are applied, so this is where
+    //     the DI container is replaced with Autofac.
     public override IHostBuilder ConfigureIHostBuilder(IHostBuilder hostBuilder) =>
         hostBuilder
             .UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureContainer<ContainerBuilder>(container =>
             {
-                // Autofac 原生注册（Microsoft.Extensions.DependencyInjection 的描述符表达不了）
+                // Autofac-native registration (not expressible with a
+                // Microsoft.Extensions.DependencyInjection service descriptor).
                 container
                     .RegisterType<AutofacProbeService>()
                     .As<IAutofacProbeService>()
                     .SingleInstance();
             });
 
-    // (2) 日志可插拔：保留 GoDough 默认的引擎控制台 sink，再叠加 NLog。
+    // (2) Pluggable logging: keep GoDough's default engine console sink and add NLog on top.
     public override void ConfigureLogging(ILoggingBuilder loggingBuilder)
     {
         base.ConfigureLogging(loggingBuilder);
 
-        // nlog.config 放在工程根，用 res:// 解析为真实文件路径（编辑器运行时有效）。
-        // 注意：导出后 res:// 进 pck，需把 nlog.config 放到可执行文件旁，或改用代码配置。
+        // nlog.config lives in the project root and is resolved through res:// to a real file
+        // path (works when running from the editor). Note: after export res:// lives inside the
+        // .pck, so place nlog.config next to the executable, or configure NLog in code instead.
         var configPath = ProjectSettings.GlobalizePath("res://nlog.config");
         if (System.IO.File.Exists(configPath))
         {
@@ -53,26 +57,27 @@ public sealed class GameAppHost : AppHost
         loggingBuilder.AddNLog();
     }
 
-    // (3) 服务注册。
+    // (3) Service registration.
     public override void ConfigureServices(IServiceCollection services)
     {
         base.ConfigureServices(services);
 
-        // 关键：GodotApi / ComponentFactory 的构造函数依赖 AppHost，必须注册。
+        // Required: GodotApi and ComponentFactory take AppHost in their constructor.
         services.AddSingleton<AppHost>(this);
 
-        // GoDough 可选工具集。
-        services.AddGodotRuntimeUtilities(); // IGodotApi：异步加载场景/着色器
-        services.AddThreadingUtilities();    // Dispatcher（作为 IOnProcess 被宿主驱动）
+        // Optional GoDough utility sets.
+        services.AddGodotRuntimeUtilities(); // IGodotApi: async scene/shader loading
+        services.AddThreadingUtilities();    // Dispatcher (driven as an IOnProcess)
         services.AddComponentFactory();      // ComponentFactory
 
-        // demo 业务服务。
+        // Demo services.
         services.AddSingleton<IGreeter, Greeter>();
-        services.AddKeyedSingleton<IGreeter, PirateGreeter>("pirate"); // 键控服务（Autofac 11 已支持）
+        services.AddKeyedSingleton<IGreeter, PirateGreeter>("pirate"); // keyed service; needs Autofac 9.0.0+
         services.AddSingleton<Counter>();
         services.AddSingleton<IOnProcess>(sp => sp.GetRequiredService<Counter>());
         services.AddSingleton<IBootstrapper, DemoBootstrapper>();
 
-        // 注意：IOptionalService 故意不注册，用于演示 [Inject(Required = false)]。
+        // Note: IOptionalService is intentionally left unregistered, to demonstrate
+        // [Inject(Required = false)].
     }
 }

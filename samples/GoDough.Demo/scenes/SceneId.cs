@@ -1,6 +1,6 @@
 namespace GoDough.Demo;
 
-/// <summary>场景枚举 key，配合 SceneManagementService&lt;SceneId&gt; 使用。</summary>
+/// <summary>Scene keys used with SceneManagementService&lt;SceneId&gt;.</summary>
 public enum SceneId
 {
     Main,

@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging;
 namespace GoDough.Demo;
 
 /// <summary>
-/// 引导器：宿主 Boot() 时执行，适合做「启动期」初始化（注册场景、预热服务等）。
+/// Bootstrapper: runs during host Boot(), which makes it a good place for startup-time
+/// initialization (registering scenes, warming up services, ...).
 /// </summary>
 public sealed class DemoBootstrapper : IBootstrapper
 {
@@ -29,15 +30,16 @@ public sealed class DemoBootstrapper : IBootstrapper
 
     public void Run()
     {
-        // 证明容器确实被换成了 Autofac。
-        _logger.LogInformation("DI 容器实现: {Container}", _services.GetType().FullName);
-        _logger.LogInformation("Autofac 原生注册的服务: {Probe}", _autofacProbe.Describe());
+        // Proves the container really is Autofac.
+        _logger.LogInformation("DI container implementation: {Container}", _services.GetType().FullName);
+        _logger.LogInformation("Service registered through Autofac: {Probe}", _autofacProbe.Describe());
 
-        // 启动期注册场景（SceneManagementService 是单例，注册后长期有效）。
+        // Register the scenes at startup. SceneManagementService is a singleton, so the
+        // registrations stay valid for the lifetime of the app.
         var scenes = _services.GetRequiredService<SceneManagementService<SceneId>>();
         scenes.RegisterSceneFile(SceneId.Main, "res://scenes/Main.tscn");
         scenes.RegisterSceneFile(SceneId.Game, "res://scenes/Game.tscn");
 
-        _logger.LogInformation("Demo 引导完成。");
+        _logger.LogInformation("Demo bootstrap complete.");
     }
 }

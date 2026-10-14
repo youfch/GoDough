@@ -1,7 +1,8 @@
 namespace GoDough.Demo;
 
 /// <summary>
-/// 故意「不注册」的服务，用于演示可选注入：<c>[Inject(Required = false)]</c> 缺失时会被跳过而非报错。
+/// Intentionally left unregistered, to demonstrate optional injection:
+/// <c>[Inject(Required = false)]</c> is skipped instead of throwing when the service is missing.
 /// </summary>
 public interface IOptionalService
 {

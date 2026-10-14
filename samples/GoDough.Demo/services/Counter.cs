@@ -5,8 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace GoDough.Demo;
 
 /// <summary>
-/// 生命周期钩子：宿主每帧调用 OnProcess（由 AppHostLoader._Process → AppHost.Process 驱动）。
-/// 注意命名空间拼写是 LivecycleHooks。
+/// Lifecycle hook: the host calls OnProcess every frame (driven by
+/// AppHostLoader._Process -&gt; AppHost.Process). Note the namespace is spelled
+/// "LivecycleHooks".
 /// </summary>
 public sealed class Counter : IOnProcess
 {
@@ -20,10 +21,10 @@ public sealed class Counter : IOnProcess
     {
         Frames++;
 
-        // 每 180 帧打一条，避免刷屏。
+        // Log once every 180 frames to avoid spamming the output.
         if (Frames % 180 == 0)
         {
-            _logger.LogInformation("Counter: 已运行 {Frames} 帧", Frames);
+            _logger.LogInformation("Counter: {Frames} frames elapsed", Frames);
         }
     }
 }

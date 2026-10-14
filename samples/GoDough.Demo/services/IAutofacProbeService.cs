@@ -1,6 +1,8 @@
 namespace GoDough.Demo;
 
-/// <summary>用 Autofac 原生 API 注册的服务（见 GameAppHost.ConfigureIHostBuilder）。</summary>
+/// <summary>
+/// Service registered through the Autofac-native API (see GameAppHost.ConfigureIHostBuilder).
+/// </summary>
 public interface IAutofacProbeService
 {
     string Describe();
@@ -8,5 +10,5 @@ public interface IAutofacProbeService
 
 public sealed class AutofacProbeService : IAutofacProbeService
 {
-    public string Describe() => "由 Autofac ContainerBuilder 原生注册并解析";
+    public string Describe() => "resolved from a native Autofac ContainerBuilder registration";
 }

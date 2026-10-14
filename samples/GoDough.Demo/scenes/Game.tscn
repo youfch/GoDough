@@ -37,4 +37,4 @@ offset_right = 110.0
 offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "返回 Main 场景"
+text = "Back to Main scene"

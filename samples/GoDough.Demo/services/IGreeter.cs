@@ -1,6 +1,8 @@
 namespace GoDough.Demo;
 
-/// <summary>业务服务接口：演示构造注入 + 键控注入。</summary>
+/// <summary>
+/// Application service interface: demonstrates constructor injection and keyed injection.
+/// </summary>
 public interface IGreeter
 {
     string Greet(string name);

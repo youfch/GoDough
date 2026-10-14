@@ -11,29 +11,29 @@ using Microsoft.Extensions.Logging;
 namespace GoDough.Demo;
 
 /// <summary>
-/// 主场景：集中演示 [Inject] 的四类语义。
+/// Main scene: demonstrates the four [Inject] variants.
 /// </summary>
 public partial class Main : Control
 {
-    [Inject] private IGreeter _greeter = null!;                          // 必填 · 普通服务
-    [Inject("pirate")] private IGreeter _pirate = null!;                 // 键控服务
-    [Inject] private Counter _counter = null!;                           // 单例（同时是 IOnProcess）
-    [Inject(Required = false)] private IOptionalService? _optional = null; // 可选（未注册 → 跳过）
-    [Inject] private ILogger<Main> _logger = null!;                      // 框架日志
+    [Inject] private IGreeter _greeter = null!;                            // required - plain service
+    [Inject("pirate")] private IGreeter _pirate = null!;                   // keyed service
+    [Inject] private Counter _counter = null!;                             // singleton (also an IOnProcess)
+    [Inject(Required = false)] private IOptionalService? _optional = null; // optional (unregistered - skipped)
+    [Inject] private ILogger<Main> _logger = null!;                        // framework logger
 
     private Label _label = null!;
     private string _greeting = "";
 
     public override void _Ready()
     {
-        this.WireNode(); // 注入所有 [Inject] 成员
+        this.WireNode(); // injects every [Inject] member
 
         _label = GetNode<Label>("%Label");
 
-        _logger.LogInformation("Main 场景就绪");
-        _logger.LogInformation("可选服务是否存在: {Present}", _optional != null);
+        _logger.LogInformation("Main scene ready");
+        _logger.LogInformation("Optional service present: {Present}", _optional != null);
 
-        // 只在这里调用一次 Greet（它会写日志），避免每帧刷屏。
+        // Call Greet only once here (it logs), so the output is not spammed every frame.
         _greeting = _greeter.Greet("Godot") + "\n" + _pirate.Greet("Godot");
 
         GetNode<Button>("%SwitchButton").Pressed += OnSwitchPressed;
@@ -43,7 +43,7 @@ public partial class Main : Control
     public override void _Process(double delta) => UpdateLabel();
 
     private void UpdateLabel() =>
-        _label.Text = $"{_greeting}\n\nCounter.Frames = {_counter.Frames}\n\n（按下方按钮切换场景）";
+        _label.Text = $"{_greeting}\n\nCounter.Frames = {_counter.Frames}\n\n(use the button below to switch scenes)";
 
     private void OnSwitchPressed() =>
         _ = AppHost.Instance!.Application.Services

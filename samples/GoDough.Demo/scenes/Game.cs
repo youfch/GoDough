@@ -11,7 +11,8 @@ using Microsoft.Extensions.Logging;
 namespace GoDough.Demo;
 
 /// <summary>
-/// 第二个场景：证明场景切换后，Autoload 上的 AppHost / 容器 依然存活，注照样有效。
+/// Second scene: proves that the AppHost / container living on the autoload survives a scene
+/// change and that injection still works.
 /// </summary>
 public partial class Game : Control
 {
@@ -22,9 +23,9 @@ public partial class Game : Control
     {
         this.WireNode();
 
-        _logger.LogInformation("Game 场景就绪（场景切换成功）");
+        _logger.LogInformation("Game scene ready (scene switch worked)");
 
-        GetNode<Label>("%Label").Text = _greeter.Greet("Game 场景");
+        GetNode<Label>("%Label").Text = _greeter.Greet("Game scene");
         GetNode<Button>("%BackButton").Pressed += OnBackPressed;
     }
 
