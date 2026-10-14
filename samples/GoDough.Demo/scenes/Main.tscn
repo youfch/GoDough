@@ -23,8 +23,27 @@ horizontal_alignment = 1
 vertical_alignment = 1
 text = "GoDough Demo"
 
-[node name="SwitchButton" type="Button" parent="."]
+[node name="Info" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 344.0
+offset_bottom = 96.0
+
+[node name="Title" type="Label" parent="Info"]
+layout_mode = 2
+text = "Info/Title (relative path)"
+
+[node name="status" type="Label" parent="."]
 unique_name_in_owner = true
+layout_mode = 0
+offset_left = 24.0
+offset_top = 104.0
+offset_right = 344.0
+offset_bottom = 136.0
+text = "status (%status from _status)"
+
+[node name="SwitchButton" type="Button" parent="."]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5

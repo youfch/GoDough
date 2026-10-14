@@ -21,8 +21,8 @@ public partial class Game : Control
     [Inject] private IGreeter _greeter = null!;
     [Inject] private ILogger<Game> _logger = null!;
 
-    [UniqueNode("Label")] private Label _label = null!;                // binds to %Label
-    [UniqueNode("BackButton")] private Button _backButton = null!;     // binds to %BackButton
+    [UniqueNode("Label")] private Label _label = null!;              // unique name  -> %Label
+    [FromNode("BackButton")] private Button _backButton = null!;     // relative path -> child "BackButton"
 
     public override void _Ready()
     {
