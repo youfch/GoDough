@@ -4,6 +4,8 @@ using GoDough.Composition.Attributes;
 using GoDough.Composition.Extensions;
 using GoDough.Runtime;
 using GoDough.Visuals;
+using GoDough.Visuals.Attributes;
+using GoDough.Visuals.Components;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,7 +13,8 @@ using Microsoft.Extensions.Logging;
 namespace GoDough.Demo;
 
 /// <summary>
-/// Main scene: demonstrates the four [Inject] variants.
+/// Main scene: demonstrates the four [Inject] variants and, on a separate pipeline,
+/// [UniqueNode] node binding.
 /// </summary>
 public partial class Main : Control
 {
@@ -21,14 +24,15 @@ public partial class Main : Control
     [Inject(Required = false)] private IOptionalService? _optional = null; // optional (unregistered - skipped)
     [Inject] private ILogger<Main> _logger = null!;                        // framework logger
 
-    private Label _label = null!;
+    [UniqueNode("Label")] private Label _label = null!;                    // binds to %Label
+    [UniqueNode("SwitchButton")] private Button _switchButton = null!;     // binds to %SwitchButton
+
     private string _greeting = "";
 
     public override void _Ready()
     {
-        this.WireNode(); // injects every [Inject] member
-
-        _label = GetNode<Label>("%Label");
+        this.WireNode();        // service injection ([Inject])
+        this.BindToViewModel(); // node binding ([UniqueNode]) - a separate pipeline
 
         _logger.LogInformation("Main scene ready");
         _logger.LogInformation("Optional service present: {Present}", _optional != null);
@@ -36,7 +40,7 @@ public partial class Main : Control
         // Call Greet only once here (it logs), so the output is not spammed every frame.
         _greeting = _greeter.Greet("Godot") + "\n" + _pirate.Greet("Godot");
 
-        GetNode<Button>("%SwitchButton").Pressed += OnSwitchPressed;
+        _switchButton.Pressed += OnSwitchPressed;
         UpdateLabel();
     }
 

@@ -5,8 +5,6 @@ using Godot;
 
 using GoDough.Runtime;
 using GoDough.Runtime.LivecycleHooks;
-using GoDough.Threading;
-using GoDough.Visuals.Components;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -57,18 +55,12 @@ public sealed class GameAppHost : AppHost
         loggingBuilder.AddNLog();
     }
 
-    // (3) Service registration.
+    // (3) Service registration. The host already registers its own service graph by default
+    //     (AppHost, IGodotApi, Dispatcher, ComponentFactory), so only application services
+    //     are registered here.
     public override void ConfigureServices(IServiceCollection services)
     {
         base.ConfigureServices(services);
-
-        // Required: GodotApi and ComponentFactory take AppHost in their constructor.
-        services.AddSingleton<AppHost>(this);
-
-        // Optional GoDough utility sets.
-        services.AddGodotRuntimeUtilities(); // IGodotApi: async scene/shader loading
-        services.AddThreadingUtilities();    // Dispatcher (driven as an IOnProcess)
-        services.AddComponentFactory();      // ComponentFactory
 
         // Demo services.
         services.AddSingleton<IGreeter, Greeter>();
