@@ -98,6 +98,11 @@ The framework resolves all of its own services only through `IServiceProvider`, 
 that plugs into `IHostBuilder.UseServiceProviderFactory` works. With Autofac
 (`Autofac.Extensions.DependencyInjection`):
 
+> Use `Autofac.Extensions.DependencyInjection` **9.0.0+**. Older adapters (e.g. 8.0.0, which pulls in
+> Autofac 6.x) predate .NET 8 keyed services: registering any `AddKeyed*` service throws
+> `ArgumentNullException` while the host is being built, and `[Inject("key")]` cannot resolve.
+> Verified working with `11.0.2`.
+
 ```cs
 public override IHostBuilder ConfigureIHostBuilder(IHostBuilder hostBuilder) =>
   hostBuilder.UseServiceProviderFactory(new AutofacServiceProviderFactory());

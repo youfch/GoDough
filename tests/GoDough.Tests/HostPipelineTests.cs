@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using GoDough.Composition;
+using GoDough.Composition.Attributes;
 using GoDough.Composition.Extensions;
 using GoDough.Runtime;
 using GoDough.Runtime.LivecycleHooks;
@@ -64,6 +65,11 @@ internal sealed class AutofacAppHost : AppHost
 
     public override IHostBuilder ConfigureIHostBuilder(IHostBuilder hostBuilder) =>
         hostBuilder.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+}
+
+internal sealed class KeyedWidgetTarget
+{
+    [Inject("keyed")] public IProbeWidget Widget { get; set; } = null!;
 }
 
 public class HostPipelineTests
@@ -146,5 +152,41 @@ public class HostPipelineTests
         var factory = app.Services.GetService<Factory<IProbeWidget>>();
         Assert.NotNull(factory);
         Assert.IsType<ProbeWidget>(factory!.Create());
+    }
+
+    [Fact]
+    public void Keyed_services_resolve_under_custom_container()
+    {
+        // Guards against a regressing Autofac adapter that cannot translate .NET 8 keyed
+        // service descriptors (adapter 8.0.0 / Autofac 6.4.0 throws during host build).
+        var host = new AutofacAppHost(null!);
+        var builder = Host.CreateDefaultBuilder(null);
+
+        host.ConfigureIHostBuilder(builder);
+        builder.ConfigureServices(services =>
+            services.AddKeyedSingleton<IProbeService, ProbeService>("keyed"));
+
+        using var app = builder.Build();
+
+        Assert.IsAssignableFrom<IKeyedServiceProvider>(app.Services);
+        Assert.IsType<ProbeService>(app.Services.GetRequiredKeyedService<IProbeService>("keyed"));
+    }
+
+    [Fact]
+    public void Keyed_injection_works_under_custom_container()
+    {
+        var host = new AutofacAppHost(null!);
+        var builder = Host.CreateDefaultBuilder(null);
+
+        host.ConfigureIHostBuilder(builder);
+        builder.ConfigureServices(services =>
+            services.AddKeyedSingleton<IProbeWidget, ProbeWidget>("keyed"));
+
+        using var app = builder.Build();
+
+        var target = new KeyedWidgetTarget();
+        NodeCompositionExtensions.WireMembers(target, app.Services);
+
+        Assert.IsType<ProbeWidget>(target.Widget);
     }
 }
