@@ -13,7 +13,7 @@ Utility library for implementing state of the art application development in God
 
 - Targets `.NET 8` and `Godot.NET.Sdk 4.7.2`
 
-See [Wiki](https://github.com/Hobart2967/GoDough/wiki) for more documentation.
+See [`docs/`](docs/README.md) for the full documentation.
 
 ## Getting Started
 
